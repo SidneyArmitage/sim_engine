@@ -4,6 +4,7 @@ use crate::drawable::{Drawable, Shape};
 use std::collections::HashMap;
 
 pub mod drawable;
+pub mod step;
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum ModId {
@@ -28,23 +29,6 @@ struct Control {
     // simulation objects
     data: HashMap<isize, ModValue>,
     mods: HashMap<ModId, Box<Mod>>,
-}
-
-mod step {
-    use crate::Drawable;
-    use crate::ModValue;
-
-    pub fn down(id: &isize, value: &ModValue) -> ModValue {
-        let draw = value.draw.unwrap();
-        ModValue {
-            down: Some(()),
-            draw: Some ( Drawable {
-                y: draw.y - 1.,
-                x: draw.x,
-                shape: draw.shape,
-            }),
-        }
-    }
 }
 
 fn sim_round(control: &mut Control) {
