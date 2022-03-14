@@ -1,3 +1,4 @@
+use crate::ModValue;
 
 #[derive(Clone, Copy)]
 pub enum Shape {
@@ -19,6 +20,8 @@ pub fn shape_to_string(shape: &Shape) -> &'static str {
     }
 }
 
-pub fn draw(item: &Drawable) {
-    println!("x: {}, y: {}, shape: {}", item.x, item.y, shape_to_string(&item.shape))
+pub fn draw(id: &isize, value: &ModValue) -> ModValue {
+    let item = value.draw.unwrap();
+    println!("x: {}, y: {}, shape: {}", item.x, item.y, shape_to_string(&item.shape));
+    *value
 }
