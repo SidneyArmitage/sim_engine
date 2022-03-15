@@ -1,7 +1,7 @@
 
 
 use crate::drawable::{Drawable, Shape};
-use std::collections::HashMap;
+use std::collections::{HashSet, HashMap};
 
 pub mod drawable;
 pub mod step;
@@ -15,7 +15,7 @@ pub enum ModId {
 struct Mod {
     pub step: fn(&isize, &ModValue) -> ModValue,
     // maps to Data in control
-    pub value: Vec<isize>,
+    pub value: HashSet<isize>,
 }
 
 #[derive(Clone, Copy)]
@@ -33,7 +33,7 @@ struct Control {
 
 fn sim_round(control: &mut Control) {
     for (_, module ) in control.mods.iter_mut() {
-        for id in (**module).value.iter_mut() {
+        for id in (**module).value.iter() {
             control.data.insert(*id, ((**module).step)(id, control.data.get(id).unwrap()));
         }
     }
@@ -67,14 +67,24 @@ fn main() {
         down: Some(()),
     });
     let mut mods = HashMap::new();
-    mods.insert(ModId::Draw, Box::new(Mod {
-        step: drawable::draw,
-        value: vec![0, 1, 2],
-    }));
-    mods.insert(ModId::Down, Box::new(Mod {
-        step: step::down,
-        value: vec![1],
-    }));
+    {
+        let mut set = HashSet::new();
+        set.insert(0);
+        set.insert(1);
+        set.insert(2);
+        mods.insert(ModId::Draw, Box::new(Mod {
+            step: drawable::draw,
+            value: set,
+        }));
+    }
+    {
+        let mut set = HashSet::new();
+        set.insert(1);
+        mods.insert(ModId::Down, Box::new(Mod {
+            step: step::down,
+            value: set,
+        }));
+    }
     let mut control = Control {
         index: 2,
         // simulation objects
