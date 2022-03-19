@@ -5,6 +5,7 @@ use std::collections::{HashSet, HashMap};
 
 pub mod drawable;
 pub mod step;
+pub mod graphics;
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum ModId {
@@ -94,4 +95,5 @@ fn main() {
     sim_round(&mut control);
     println!("next");
     sim_round(&mut control);
+    graphics::run();
 }
