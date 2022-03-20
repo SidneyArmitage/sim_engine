@@ -1,7 +1,7 @@
 use opengl_graphics::GlGraphics;
 use piston_window::{Rectangle, CircleArc, Context};
 
-use crate::ModValue;
+use crate::example::shapes::ModValue;
 
 #[derive(Clone, Copy)]
 pub enum Shape {

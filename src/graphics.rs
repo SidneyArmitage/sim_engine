@@ -10,7 +10,7 @@ use piston_window::{Rectangle, clear};
 use crate::{sim_round, Control};
 
 
-pub fn run(control: &mut Control) {
+pub fn run<T, G>(control: &mut Control<T, G>) {
     let opengl = OpenGL::V3_2;
     let mut window: PistonWindow = WindowSettings::new("opengl_graphics: colored_image_test", [300, 300])
         .exit_on_esc(true)

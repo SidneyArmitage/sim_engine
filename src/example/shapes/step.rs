@@ -1,5 +1,4 @@
-use crate::Drawable;
-use crate::ModValue;
+use crate::example::shapes::{ModValue, Drawable};
 
 pub fn down(id: &isize, value: &ModValue) -> ModValue {
     let draw = value.draw.unwrap();
