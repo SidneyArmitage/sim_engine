@@ -1,7 +1,10 @@
 
 
+use piston_window::Context;
+
 use crate::drawable::{Drawable, Shape};
 use std::collections::{HashSet, HashMap};
+use opengl_graphics::GlGraphics;
 
 pub mod drawable;
 pub mod step;
@@ -13,8 +16,8 @@ pub enum ModId {
     Down,
 }
 
-struct Mod {
-    pub step: fn(&isize, &ModValue) -> ModValue,
+struct Mod<T> {
+    pub function: T,
     // maps to Data in control
     pub value: HashSet<isize>,
 }
@@ -25,17 +28,24 @@ pub struct ModValue {
     down: Option<()>,
 }
 
-struct Control {
+pub struct Control {
     index: isize,
     // simulation objects
     data: HashMap<isize, ModValue>,
-    mods: HashMap<ModId, Box<Mod>>,
+    step: HashMap<ModId, Box<Mod<fn(&isize, &ModValue) -> ModValue>>>,
+    draw: HashMap<ModId, Box<Mod<fn(&Context, &mut GlGraphics, &ModValue) -> ()>>>,
 }
 
-fn sim_round(control: &mut Control) {
-    for (_, module ) in control.mods.iter_mut() {
+pub fn sim_round(control: &mut Control, context: &Context, graphics: &mut GlGraphics) {
+    for (_, module ) in control.step.iter_mut() {
         for id in (**module).value.iter() {
-            control.data.insert(*id, ((**module).step)(id, control.data.get(id).unwrap()));
+            control.data.insert(*id, ((**module).function)(id, control.data.get(id).unwrap()));
+        }
+    }
+    // draw graphics
+    for (_, module ) in control.draw.iter_mut() {
+        for id in (**module).value.iter() {
+            ((**module).function)(context, graphics, control.data.get(id).unwrap());
         }
     }
 }
@@ -61,28 +71,29 @@ fn main() {
     });
     data.insert(2, ModValue {
         draw: Some(Drawable {
-            x: 1.,
-            y: 1.,
+            x: 200.,
+            y: 200.,
             shape: Shape::SQUARE,
         }),
         down: Some(()),
     });
-    let mut mods = HashMap::new();
+    let mut step = HashMap::new();
+    {
+        let mut set = HashSet::new();
+        set.insert(1);
+        step.insert(ModId::Down, Box::new(Mod {
+            function: step::down as fn(&isize, &ModValue) -> ModValue,
+            value: set,
+        }));
+    }
+    let mut draw = HashMap::new();
     {
         let mut set = HashSet::new();
         set.insert(0);
         set.insert(1);
         set.insert(2);
-        mods.insert(ModId::Draw, Box::new(Mod {
-            step: drawable::draw,
-            value: set,
-        }));
-    }
-    {
-        let mut set = HashSet::new();
-        set.insert(1);
-        mods.insert(ModId::Down, Box::new(Mod {
-            step: step::down,
+        draw.insert(ModId::Draw, Box::new(Mod {
+            function: drawable::draw as fn(&Context, &mut GlGraphics, &ModValue) -> (),
             value: set,
         }));
     }
@@ -90,10 +101,8 @@ fn main() {
         index: 2,
         // simulation objects
         data,
-        mods,
+        step,
+        draw,
     };
-    sim_round(&mut control);
-    println!("next");
-    sim_round(&mut control);
-    graphics::run();
+    graphics::run(&mut control);
 }

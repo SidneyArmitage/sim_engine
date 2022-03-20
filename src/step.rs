@@ -6,7 +6,7 @@ pub fn down(id: &isize, value: &ModValue) -> ModValue {
     ModValue {
         down: Some(()),
         draw: Some ( Drawable {
-            y: draw.y - 1.,
+            y: draw.y + 1.,
             x: draw.x,
             shape: draw.shape,
         }),
