@@ -16,7 +16,7 @@ pub struct Control<T, G> {
     // simulation objects
     data: HashMap<isize, T>,
     step: HashMap<G, Box<Mod<fn(&isize, &T) -> T>>>,
-    draw: HashMap<G, Box<Mod<fn(&Context, &mut GlGraphics, &T) -> ()>>>,
+    draw: Vec<HashMap<G, Box<Mod<fn(&Context, &mut GlGraphics, &T) -> ()>>>>,
 }
 
 pub fn sim_round<T, G>(control: &mut Control<T, G>, context: &Context, graphics: &mut GlGraphics) {
@@ -29,9 +29,11 @@ pub fn sim_round<T, G>(control: &mut Control<T, G>, context: &Context, graphics:
         }
     }
     // draw graphics
-    for (_, module) in control.draw.iter_mut() {
-        for id in (**module).value.iter() {
-            ((**module).function)(context, graphics, control.data.get(id).unwrap());
+    for mut draw in control.draw.iter_mut() {
+        for (_, module) in draw.iter_mut() {
+            for id in (**module).value.iter() {
+                ((**module).function)(context, graphics, control.data.get(id).unwrap());
+            }
         }
     }
 }

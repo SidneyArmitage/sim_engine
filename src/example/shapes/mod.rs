@@ -68,19 +68,21 @@ pub fn main() {
             }),
         );
     }
-    let mut draw = HashMap::new();
+    let mut draw = vec!();
     {
+        let mut graphic = HashMap::new();
         let mut set = HashSet::new();
         set.insert(0);
         set.insert(1);
         set.insert(2);
-        draw.insert(
+        graphic.insert(
             ModId::Draw,
             Box::new(Mod {
                 function: drawable::draw as fn(&Context, &mut GlGraphics, &ModValue) -> (),
                 value: set,
             }),
         );
+        draw.push(graphic);
     }
     let mut control: Control<ModValue, ModId> = Control {
         index: 2,

@@ -6,8 +6,11 @@ use piston::input::*;
 use piston::window::WindowSettings;
 use opengl_graphics::*;
 use piston_window::PistonWindow;
-use piston_window::{Rectangle, clear};
+use piston_window::{clear};
 use crate::{sim_round, Control};
+mod program;
+
+// Shader & program from: https://github.com/Nercury/rust-and-opengl-lessons/blob/master/lesson-03/src/render_gl.rs
 
 
 pub fn run<T, G>(control: &mut Control<T, G>) {

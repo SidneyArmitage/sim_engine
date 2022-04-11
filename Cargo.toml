@@ -15,6 +15,7 @@ path = "src/mod.rs"
 piston_window = "*"
 piston2d-opengl_graphics = "*"
 piston = "*"
+gl = "*"
 
 
 [dev-dependencies]

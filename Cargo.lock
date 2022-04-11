@@ -1767,6 +1767,7 @@ dependencies = [
 name = "sim_engine"
 version = "0.1.0"
 dependencies = [
+ "gl",
  "piston",
  "piston2d-opengl_graphics",
  "piston_window",
