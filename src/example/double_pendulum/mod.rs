@@ -82,6 +82,10 @@ mod obj {
     Line::new([1.0, 0.0, 0.0, 1.0], 1.0).draw_from_to([(20.0 + 10.0 * cartesian.1.0) * 30.0, (20.0 - 10.0 * cartesian.1.1) * 30.0], [(20.0 + 10.0 * cartesian.2.0) * 30.0, (20.0 - 10.0 * cartesian.2.1) * 30.0], &c.draw_state, c.transform, g);
     ()
   }
+
+  pub fn postProcess(c: &Context, g: &mut GlGraphics, value: &ModValue) {
+
+  }
   
 }
 fn print_cartesian(input: &((f64, f64), (f64, f64), (f64, f64))) -> String {
@@ -132,6 +136,19 @@ pub fn main () {
       );
       draw.push(graphic);
   }
+  // {
+  //     let mut graphic = HashMap::new();
+  //     let mut set = HashSet::new();
+  //     set.insert(0);
+  //     graphic.insert(
+  //         ModId::PENDULUM,
+  //         Box::new(Mod {
+  //             function: obj::postProcess as fn(&Context, &mut GlGraphics, &ModValue) -> (),
+  //             value: set,
+  //         }),
+  //     );
+  //     draw.push(graphic);
+  // }
   let mut control: Control<ModValue, ModId> = Control {
       index: 2,
       // simulation objects

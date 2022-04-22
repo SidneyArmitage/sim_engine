@@ -2,12 +2,12 @@ use std::ffi::CString;
 
 use opengl_graphics::shader_utils::compile_shader;
 use gl;
-pub fn init() {
+pub fn init() -> Result<Program, String> {
     let frag_string = include_str!("../../data/graphics/basicProgram/frag.glsl");
     let vert_string = include_str!("../../data/graphics/basicProgram/vert.glsl");
     let frag_shader = compile_shader(gl::FRAGMENT_SHADER, frag_string);
     let vert_shader = compile_shader(gl::VERTEX_SHADER, vert_string);
-    Program::from_shaders(&[frag_shader.unwrap(), vert_shader.unwrap()]);
+    return Program::from_shaders(&[frag_shader.unwrap(), vert_shader.unwrap()]);
 }
 
 
