@@ -1,13 +1,17 @@
-use sdl2::{self, EventPump};
+use sdl2::{self, EventPump, video::{self, Window}};
 use std::{
   sync::{mpsc::{self, Sender, TryRecvError, Receiver, SendError}},
   thread::{spawn},
 };
+
+use self::graphicsContext::{clear, clearColour, viewPort};
+
+mod graphicsContext;
 pub struct App {
   tx: Sender<()>,
 }
 
-fn start (rx: &Receiver<()>, event_pump: &mut EventPump) {
+fn start (rx: &Receiver<()>, event_pump: &mut EventPump, window: Window) {
   'main: loop {
     match rx.try_recv() {
         Ok(_) | Err(TryRecvError::Disconnected) => {
@@ -25,6 +29,8 @@ fn start (rx: &Receiver<()>, event_pump: &mut EventPump) {
             _ => {},
         }
     }
+    clear();
+    window.gl_swap_window();
   }
 }
 
@@ -34,6 +40,7 @@ impl App {
     spawn(move || {
       let sdl = sdl2::init().unwrap();
       let video_subsystem = sdl.video().unwrap();
+      let gl_attr = video_subsystem.gl_attr();
       let window = video_subsystem
         .window("test", 900, 700)
         .opengl()
@@ -43,7 +50,9 @@ impl App {
       let mut event_pump = sdl.event_pump().unwrap();
       let gl_context = window.gl_create_context().unwrap();
       let gl = gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
-      start(&rx, &mut event_pump)
+      viewPort(0, 0, 900, 700);
+      clearColour(0.5, 0.5, 0.5, 1.0);
+      start(&rx, &mut event_pump, window)
     });
     Self {
       tx,

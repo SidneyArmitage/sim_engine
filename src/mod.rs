@@ -2,6 +2,8 @@ extern crate sdl2;
 extern crate gl;
 
 use std::collections::{HashMap, HashSet};
+
+use graphics::App;
 pub mod graphics;
 mod example;
 pub struct Mod<T> {
@@ -29,6 +31,8 @@ pub fn sim_round<T, G>(control: &mut Control<T, G>) {
 }
 
 fn main () {
-  example::double_pendulum::main();
-  // example::shapes::main();
+    // example::double_pendulum::main();
+    // example::shapes::main();
+    let app = App::new();
+    loop {}
 }
