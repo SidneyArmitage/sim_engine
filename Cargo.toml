@@ -12,12 +12,9 @@ path = "src/mod.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-piston_window = "*"
-piston2d-opengl_graphics = "*"
-piston = "*"
-gl = "*"
+sdl2 = { version = "0.32.2", features = ["bundled", "static-link"] }
+gl = "0.14.0"
 
 
 [dev-dependencies]
-pistoncore-sdl2_window = "0.68.0"
 rand = "0.6.0"

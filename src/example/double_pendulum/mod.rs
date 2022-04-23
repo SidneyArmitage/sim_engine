@@ -1,5 +1,4 @@
-use opengl_graphics::GlGraphics;
-use piston_window::Context;
+
 use std::collections::{HashMap, HashSet};
 use crate::{Control, Mod, graphics};
 
@@ -37,10 +36,7 @@ pub fn polar_to_cartesian (Polar { theta, length }: &Polar) -> ((f64, f64), (f64
   )
 }
 mod obj {
-  use piston_window::{Line, Context};
-  use piston_window::line::Shape;
   use crate::Control;
-  use opengl_graphics::GlGraphics;
   use crate::example::double_pendulum::{Pendulum, ModValue, Polar, polar_to_cartesian};
 
   pub fn step (id: &isize, value: &ModValue) -> ModValue {
@@ -74,17 +70,6 @@ mod obj {
         g: g,
       })
     }
-  }
-  
-  pub fn draw(c: &Context, g: &mut GlGraphics, value: &ModValue) {
-    let cartesian = polar_to_cartesian(&value.pendulum.unwrap().polar);
-    Line::new([1.0, 0.0, 0.0, 1.0], 1.0).draw_from_to([(20.0 + 10.0 * cartesian.0.0) * 30.0, (20.0 - 10.0 * cartesian.0.1) * 30.0], [(20.0 + 10.0 * cartesian.1.0) * 30.0, (20.0 - 10.0 * cartesian.1.1) * 30.0], &c.draw_state, c.transform, g);
-    Line::new([1.0, 0.0, 0.0, 1.0], 1.0).draw_from_to([(20.0 + 10.0 * cartesian.1.0) * 30.0, (20.0 - 10.0 * cartesian.1.1) * 30.0], [(20.0 + 10.0 * cartesian.2.0) * 30.0, (20.0 - 10.0 * cartesian.2.1) * 30.0], &c.draw_state, c.transform, g);
-    ()
-  }
-
-  pub fn postProcess(c: &Context, g: &mut GlGraphics, value: &ModValue) {
-
   }
   
 }
@@ -122,41 +107,12 @@ pub fn main () {
           }),
       );
   }
-  let mut draw = vec!();
-  {
-      let mut graphic = HashMap::new();
-      let mut set = HashSet::new();
-      set.insert(0);
-      graphic.insert(
-          ModId::PENDULUM,
-          Box::new(Mod {
-              function: obj::draw as fn(&Context, &mut GlGraphics, &ModValue) -> (),
-              value: set,
-          }),
-      );
-      draw.push(graphic);
-  }
-  // {
-  //     let mut graphic = HashMap::new();
-  //     let mut set = HashSet::new();
-  //     set.insert(0);
-  //     graphic.insert(
-  //         ModId::PENDULUM,
-  //         Box::new(Mod {
-  //             function: obj::postProcess as fn(&Context, &mut GlGraphics, &ModValue) -> (),
-  //             value: set,
-  //         }),
-  //     );
-  //     draw.push(graphic);
-  // }
   let mut control: Control<ModValue, ModId> = Control {
       index: 2,
       // simulation objects
       data,
       step,
-      draw,
   };
-  graphics::run(&mut control);
 }
 
 mod tests {
