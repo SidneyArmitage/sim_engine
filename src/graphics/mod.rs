@@ -4,9 +4,8 @@ use std::{
   thread::{spawn},
 };
 
-use self::graphicsContext::{clear, clearColour, viewPort};
 
-mod graphicsContext;
+mod program;
 pub struct App {
   tx: Sender<()>,
 }
@@ -29,7 +28,9 @@ fn start (rx: &Receiver<()>, event_pump: &mut EventPump, window: Window) {
             _ => {},
         }
     }
-    clear();
+    unsafe {
+      gl::Clear(gl::COLOR_BUFFER_BIT);
+    }
     window.gl_swap_window();
   }
 }
@@ -41,6 +42,8 @@ impl App {
       let sdl = sdl2::init().unwrap();
       let video_subsystem = sdl.video().unwrap();
       let gl_attr = video_subsystem.gl_attr();
+      gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
+      gl_attr.set_context_version(4, 5);
       let window = video_subsystem
         .window("test", 900, 700)
         .opengl()
@@ -50,8 +53,10 @@ impl App {
       let mut event_pump = sdl.event_pump().unwrap();
       let gl_context = window.gl_create_context().unwrap();
       let gl = gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
-      viewPort(0, 0, 900, 700);
-      clearColour(0.5, 0.5, 0.5, 1.0);
+      unsafe {
+        gl::Viewport(0, 0, 900, 700);
+        gl::ClearColor(0.5, 0.5, 0.5, 1.0);
+      }
       start(&rx, &mut event_pump, window)
     });
     Self {
