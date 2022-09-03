@@ -1,0 +1,11 @@
+[package]
+name = "double_pendulum"
+version = "0.1.0"
+edition = "2018"
+
+[[bin]]
+name = "double_pendulum"
+path = "src/mod.rs"
+
+[dependencies]
+engine = { path = "../engine" }

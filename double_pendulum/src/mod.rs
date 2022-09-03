@@ -1,4 +1,6 @@
-use crate::{graphics, Control, Mod};
+extern crate engine;
+
+use engine::{graphics, Control, Mod, start};
 use std::collections::{HashMap, HashSet};
 
 #[derive(PartialEq, Eq, Hash)]
@@ -35,7 +37,7 @@ pub fn polar_to_cartesian(Polar { theta, length }: &Polar) -> ((f64, f64), (f64,
   )
 }
 mod obj {
-  use crate::example::double_pendulum::{polar_to_cartesian, ModValue, Pendulum, Polar};
+  use crate::{polar_to_cartesian, ModValue, Pendulum, Polar};
   use crate::Control;
 
   pub fn step(id: &isize, value: &ModValue) -> ModValue {
@@ -115,6 +117,7 @@ pub fn main() {
     data,
     step,
   };
+  start();
 }
 
 mod tests {
