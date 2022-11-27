@@ -1,0 +1,29 @@
+package "Control" {
+
+  package "sim_round" {
+  description "loops"
+  [step] <-- Mod: accesses
+  [draw] <-- Mod: accesses
+  }
+  [draw] --> Graphics
+
+  package "Graphics" {
+    package "App" {
+      [new]
+      [close]
+    }
+    App --> [start]
+    App --> opengl
+    [start] --> sim_round: runs
+  }
+
+}
+
+
+package "Mod" {
+
+}
+
+package "opengl" {
+
+}

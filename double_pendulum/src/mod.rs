@@ -37,7 +37,7 @@ pub fn polar_to_cartesian(Polar { theta, length }: &Polar) -> ((f64, f64), (f64,
   )
 }
 mod obj {
-  use crate::{polar_to_cartesian, ModValue, Pendulum, Polar};
+  use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
   use crate::Control;
 
   pub fn step(id: &isize, value: &ModValue) -> ModValue {
@@ -78,6 +78,16 @@ mod obj {
       }),
     }
   }
+
+  pub fn draw(value: &ModValue) {
+    let Pendulum {
+      polar,
+      point,
+      dt,
+      g,
+    } = value.pendulum.unwrap();
+    println!("{}", print_cartesian(&polar_to_cartesian(&polar)));
+  }
 }
 fn print_cartesian(input: &((f64, f64), (f64, f64), (f64, f64))) -> String {
   format!(
@@ -111,13 +121,24 @@ pub fn main() {
       }),
     );
   }
+  let mut draw = {
+    let mut map = HashMap::new();
+    let mut set = HashSet::new();
+    set.insert(0);
+    map.insert(ModId::PENDULUM, Box::new(Mod {
+      function: obj::draw as fn(&ModValue) -> (),
+      value: set,
+    }));
+    vec![map]
+  };
   let mut control: Control<ModValue, ModId> = Control {
     index: 2,
     // simulation objects
     data,
+    draw,
     step,
   };
-  start();
+  start(&mut control);
 }
 
 mod tests {

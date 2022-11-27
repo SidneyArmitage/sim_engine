@@ -1,0 +1,9 @@
+package "App" {
+  [Mod]
+}
+
+package "Library" {
+  [Control]
+}
+
+Mod -> Control

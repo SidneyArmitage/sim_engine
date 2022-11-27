@@ -1,24 +1,25 @@
 use gl::types::GLuint;
 use sdl2::{
   self,
-  video::{self, Window},
+  video::{Window},
   EventPump,
 };
 use std::ffi::CString;
 use std::{
   sync::mpsc::{self, Receiver, SendError, Sender, TryRecvError},
-  thread::spawn,
 };
+
+use crate::{Control, sim_round};
 
 use self::{shader::Shader, program::Program};
 
-mod program;
+pub mod program;
 mod shader;
 pub struct App {
   tx: Sender<()>,
 }
 
-fn start(rx: &Receiver<()>, event_pump: &mut EventPump, window: Window, vao: GLuint, program: Program) {
+fn start<T, G>(rx: &Receiver<()>, event_pump: &mut EventPump, window: Window, vao: GLuint, program: Program, control: &mut Control<T, G>) {
   'main: loop {
     match rx.try_recv() {
       Ok(_) | Err(TryRecvError::Disconnected) => {
@@ -37,15 +38,9 @@ fn start(rx: &Receiver<()>, event_pump: &mut EventPump, window: Window, vao: GLu
       }
     }
     unsafe {
-      program.set_used();
-      gl::Clear(gl::COLOR_BUFFER_BIT);
       gl::BindVertexArray(vao);
-      gl::DrawArrays(
-          gl::TRIANGLES, // mode
-          0, // starting index in the enabled arrays
-          3 // number of indices to be rendered
-      );
     }
+    sim_round(control, &program);
     window.gl_swap_window();
   }
 }
@@ -59,9 +54,8 @@ fn init_program() -> Result<Program, String> {
 }
 
 impl App {
-  pub fn new() -> Self {
+  pub fn new<T, G>(control: &mut Control<T, G>) -> Self {
     let (tx, rx) = mpsc::channel::<()>();
-    spawn(move || {
       let sdl = sdl2::init().unwrap();
       let video_subsystem = sdl.video().unwrap();
       let gl_attr = video_subsystem.gl_attr();
@@ -116,8 +110,7 @@ impl App {
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
       }
-      start(&rx, &mut event_pump, window, vertex_array_object, program)
-    });
+      start(&rx, &mut event_pump, window, vertex_array_object, program, control);
     Self { tx }
   }
 
@@ -133,16 +126,4 @@ fn create_whitespace_cstring_with_len(len: usize) -> CString {
   buffer.extend([b' '].iter().cycle().take(len));
   // convert buffer to CString
   unsafe { CString::from_vec_unchecked(buffer) }
-}
-
-#[cfg(test)]
-mod tests {
-
-  use super::*;
-
-  #[test]
-  fn testSDL2OpensWindowClosesWindow() {
-    let mut window = App::new();
-    window.close().unwrap();
-  }
 }

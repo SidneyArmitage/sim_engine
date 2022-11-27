@@ -1,3 +1,5 @@
 ☐ add method for storing program
 ☐ pass in given program
-☐ draw onto program
+✔ draw onto program @done(22-11-27 13:09)
+✔ run sim round in graphics program @done(22-11-27 13:09)
+☐ pass in graphics object to interact with opengl
