@@ -29,6 +29,10 @@ pub fn sim_round<T, G>(control: &mut Control<T, G>, program: &Program) {
       );
     }
   }
+  program.set_used();
+  unsafe {
+    gl::Clear(gl::COLOR_BUFFER_BIT);
+  }
   // draw graphics
   for mut draw in control.draw.iter_mut() {
     for (_, module) in draw.iter_mut() {
@@ -38,8 +42,6 @@ pub fn sim_round<T, G>(control: &mut Control<T, G>, program: &Program) {
     }
   }
   unsafe {
-    program.set_used();
-    gl::Clear(gl::COLOR_BUFFER_BIT);
     gl::DrawArrays(
         gl::TRIANGLES, // mode
         0, // starting index in the enabled arrays
