@@ -1,7 +1,8 @@
+@startuml control
+
 package "Control" {
 
   package "sim_round" {
-  description "loops"
   [step] <-- Mod: accesses
   [draw] <-- Mod: accesses
   }
@@ -11,12 +12,13 @@ package "Control" {
     package "App" {
       [new]
       [close]
+      [start] --> sim_round: runs
     }
-    App --> [start]
     App --> opengl
-    [start] --> sim_round: runs
+    [start] as start_fn
+    start_fn --> App
   }
-
+  note left of sim_round: "loops"
 }
 
 
@@ -27,3 +29,5 @@ package "Mod" {
 package "opengl" {
 
 }
+
+@enduml
