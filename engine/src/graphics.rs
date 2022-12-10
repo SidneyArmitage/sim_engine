@@ -47,8 +47,8 @@ fn start<T, G>(rx: &Receiver<()>, event_pump: &mut EventPump, window: Window, va
 
 fn init_program() -> Result<Program, String> {
   let shaders = [
-    Shader::from_frag_source(&CString::new(include_str!("../../data/graphics/basicProgram/frag.glsl")).unwrap()).unwrap(),
-    Shader::from_vert_source(&CString::new(include_str!("../../data/graphics/basicProgram/vert.glsl")).unwrap()).unwrap(),
+    Shader::from_frag_source(&CString::new(include_str!("../data/graphics/basicProgram/frag.glsl")).unwrap()).unwrap(),
+    Shader::from_vert_source(&CString::new(include_str!("../data/graphics/basicProgram/vert.glsl")).unwrap()).unwrap(),
   ];
   Program::from_shaders(&shaders)
 }
