@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 
 use graphics::{App, program::Program};
 pub mod graphics;
+pub mod paint;
 pub struct Mod<T> {
   pub function: T,
   // maps to Data in control
@@ -51,5 +52,6 @@ pub fn sim_round<T, G>(control: &mut Control<T, G>, program: &Program) {
 }
 
 pub fn start<T, G>(control: &mut Control<T, G>) {
-  App::new(control);
+  let mut app = App::new();
+  app.start(control);
 }
