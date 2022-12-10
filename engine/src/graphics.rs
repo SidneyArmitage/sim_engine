@@ -17,13 +17,13 @@ pub mod program;
 mod shader;
 pub struct App {
   event_pump: EventPump,
+  // gl context is needed here to keep it in scope or opengl will not work.
   gl_context: GLContext,
   paint: Paint,
   program: Program,
   rx: Receiver<()>,
   tx: Sender<()>,
   vertex_array_object: GLuint, 
-  vertex_buffer_object: GLuint, 
   window: Window, 
 }
 
@@ -97,7 +97,6 @@ impl App {
       rx,
       tx, 
       vertex_array_object,
-      vertex_buffer_object,
       window,
     }
   }
