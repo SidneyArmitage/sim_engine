@@ -1,6 +1,6 @@
 extern crate engine;
 
-use engine::{graphics, Control, Mod, start};
+use engine::{graphics::{self, init_default_program, Graphics}, Control, Mod, start, Draw, paint::Paint, App};
 use std::collections::{HashMap, HashSet};
 
 #[derive(PartialEq, Eq, Hash)]
@@ -37,7 +37,10 @@ pub fn polar_to_cartesian(Polar { theta, length }: &Polar) -> ((f64, f64), (f64,
   )
 }
 mod obj {
-  use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
+  use engine::graphics::program::{self, Program};
+use engine::paint::{clear, Paint};
+
+use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
   use crate::Control;
 
   pub fn step(id: &isize, value: &ModValue) -> ModValue {
@@ -86,9 +89,19 @@ mod obj {
       dt,
       g,
     } = value.pendulum.unwrap();
-    println!("{}", print_cartesian(&polar_to_cartesian(&polar)));
+    // println!("{}", print_cartesian(&polar_to_cartesian(&polar)));
+  }
+
+  pub fn draw_post(paint: &Paint) {
+    paint.draw_triangles();
+    paint.publish();
+  }
+  pub fn draw_pre(program: &Program) {
+    program.set_used();
+    clear();
   }
 }
+
 fn print_cartesian(input: &((f64, f64), (f64, f64), (f64, f64))) -> String {
   format!(
     "(({}, {}), ({}, {}), ({}, {}))",
@@ -96,7 +109,7 @@ fn print_cartesian(input: &((f64, f64), (f64, f64), (f64, f64))) -> String {
   )
 }
 
-pub fn main() {
+pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
   let polar = Polar {
     theta: (std::f64::consts::PI, std::f64::consts::PI - 0.01), // can change
     length: 1.0f64,
@@ -129,16 +142,31 @@ pub fn main() {
       function: obj::draw as fn(&ModValue) -> (),
       value: set,
     }));
-    vec![map]
+    let program = init_default_program().unwrap();
+    let mut paint = Paint::new(&graphics.get_vertex_buffer());
+    paint.create_triangle2D([
+      [-0.5f32, -0.5f32],
+      [0.5f32, -0.5f32],
+      [0.0f32, 0.5f32]]);
+    vec![Draw {
+      map,
+      post: obj::draw_post,
+      pre: obj::draw_pre,
+      program,
+      paint,
+    }]
   };
-  let mut control: Control<ModValue, ModId> = Control {
+  App::new(Control {
     index: 2,
     // simulation objects
     data,
     draw,
     step,
-  };
-  start(&mut control);
+  }, graphics)
+}
+
+fn main() {
+  start(init);
 }
 
 mod tests {

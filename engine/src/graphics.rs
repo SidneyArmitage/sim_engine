@@ -9,25 +9,23 @@ use std::{
   sync::mpsc::{self, Receiver, SendError, Sender, TryRecvError},
 };
 
-use crate::{Control, sim_round, paint::{Paint, publish}};
+use crate::{Control, sim_round, paint::{Paint}};
 
 use self::{shader::Shader, program::Program};
 
 pub mod program;
 mod shader;
-pub struct App {
+pub struct Graphics {
   event_pump: EventPump,
   // gl context is needed here to keep it in scope or opengl will not work.
   gl_context: GLContext,
-  paint: Paint,
-  program: Program,
   rx: Receiver<()>,
   tx: Sender<()>,
   vertex_array_object: GLuint, 
   window: Window, 
 }
 
-fn init_program() -> Result<Program, String> {
+pub fn init_default_program() -> Result<Program, String> {
   let shaders = [
     Shader::from_frag_source(&CString::new(include_str!("../data/graphics/basicProgram/frag.glsl")).unwrap()).unwrap(),
     Shader::from_vert_source(&CString::new(include_str!("../data/graphics/basicProgram/vert.glsl")).unwrap()).unwrap(),
@@ -35,7 +33,7 @@ fn init_program() -> Result<Program, String> {
   Program::from_shaders(&shaders)
 }
 
-impl App {
+impl Graphics {
   pub fn new() -> Self {
     let (tx, rx) = mpsc::channel::<()>();
     let sdl = sdl2::init().unwrap();
@@ -57,24 +55,26 @@ impl App {
       gl::Viewport(0, 0, 900, 700);
       gl::ClearColor(0.5, 0.5, 0.5, 1.0);
     }
-    // to be moved out later
-    let program = init_program().unwrap();
-    program.set_used();
-    let mut paint = Paint::new();
-    paint.create_triangle2D([
-      [-0.5f32, -0.5f32],
-      [0.5f32, -0.5f32],
-      [0.0f32, 0.5f32]]);
-    let mut vertex_buffer_object: GLuint = 0;
     let mut vertex_array_object: GLuint = 0;
     unsafe {
-      gl::GenBuffers(1, &mut vertex_buffer_object);
-    }
-    publish(&paint, vertex_buffer_object);
-    unsafe {
-      gl::BindBuffer(gl::ARRAY_BUFFER, 0);
       gl::GenVertexArrays(1, &mut vertex_array_object);
       gl::BindVertexArray(vertex_array_object);
+    }
+    // start(&rx, &mut event_pump, window, vertex_array_object, program, control);
+    Self { 
+      event_pump,
+      gl_context,
+      rx,
+      tx,
+      vertex_array_object,
+      window,
+    }
+  }
+
+  pub fn get_vertex_buffer(&self) -> GLuint {
+    let mut vertex_buffer_object: GLuint = 0;
+    unsafe {
+      gl::GenBuffers(1, &mut vertex_buffer_object);
       gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer_object);
       gl::EnableVertexAttribArray(0); // this is "layout (location = 0)" in vertex shader
       gl::VertexAttribPointer(
@@ -88,17 +88,7 @@ impl App {
       gl::BindBuffer(gl::ARRAY_BUFFER, 0);
       gl::BindVertexArray(0);
     }
-    // start(&rx, &mut event_pump, window, vertex_array_object, program, control);
-    Self { 
-      event_pump,
-      gl_context,
-      paint,
-      program,
-      rx,
-      tx, 
-      vertex_array_object,
-      window,
-    }
+    vertex_buffer_object
   }
 
   pub fn start<T, G>(&mut self, control: &mut Control<T, G>) {
@@ -123,7 +113,7 @@ impl App {
     unsafe {
       gl::BindVertexArray(self.vertex_array_object);
     }
-    sim_round(control, &self.program);
+    sim_round(control);
     self.window.gl_swap_window();
   }
 }
