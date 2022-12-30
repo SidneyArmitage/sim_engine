@@ -4,7 +4,7 @@ use sdl2::{
   video::{Window, GLContext},
   EventPump,
 };
-use std::ffi::CString;
+use std::{ffi::CString, time::SystemTime};
 use std::{
   sync::mpsc::{self, Receiver, SendError, Sender, TryRecvError},
 };
@@ -92,7 +92,7 @@ impl Graphics {
   }
 
   pub fn start<T, G>(&mut self, control: &mut Control<T, G>) {
-  
+  let mut current_time = SystemTime::now();
   'main: loop {
     match self.rx.try_recv() {
       Ok(_) | Err(TryRecvError::Disconnected) => {
@@ -113,7 +113,10 @@ impl Graphics {
     unsafe {
       gl::BindVertexArray(self.vertex_array_object);
     }
-    sim_round(control);
+    let new_time = SystemTime::now();
+    let delta_time = new_time.duration_since(current_time).unwrap();
+    sim_round(delta_time.as_nanos(), control);
+    current_time = new_time;
     self.window.gl_swap_window();
   }
 }

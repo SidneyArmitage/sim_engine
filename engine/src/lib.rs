@@ -15,7 +15,7 @@ pub struct Mod<T> {
 }
 
 pub struct Draw<T, G> {
-  pub map: HashMap<G, Box<Mod<fn(&T) -> ()>>>,
+  pub map: HashMap<G, Box<Mod<fn(&mut Paint, &T) -> T>>>,
   pub post: fn(&Paint) -> (),
   pub pre: fn(&Program) -> (),
   pub program: Program,
@@ -27,16 +27,16 @@ pub struct Control<T, G> {
   // simulation objects
   pub data: HashMap<isize, T>,
   pub draw: Vec<Draw<T, G>>,
-  pub step: HashMap<G, Box<Mod<fn(&isize, &T) -> T>>>,
+  pub step: HashMap<G, Box<Mod<fn(u128, &isize, &T) -> T>>>,
 }
 
-pub fn sim_round<T, G>(control: &mut Control<T, G>) {
+pub fn sim_round<T, G>(delta_time: u128, control: &mut Control<T, G>) {
   //step
   for (_, module) in control.step.iter_mut() {
     for id in (**module).value.iter() {
       control.data.insert(
         *id,
-        ((**module).function)(id, control.data.get(id).unwrap()),
+        ((**module).function)(delta_time, id, control.data.get(id).unwrap()),
       );
     }
   }
@@ -45,7 +45,10 @@ pub fn sim_round<T, G>(control: &mut Control<T, G>) {
     (draw.pre)(&draw.program);
     for (_, module) in draw.map.iter_mut() {
       for id in (**module).value.iter() {
-          ((**module).function)(control.data.get(id).unwrap());
+        control.data.insert(
+          *id,
+          ((**module).function)(&mut draw.paint, control.data.get(id).unwrap())
+        );
       }
     }
     (draw.post)(&draw.paint);

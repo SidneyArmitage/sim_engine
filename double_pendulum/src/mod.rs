@@ -43,7 +43,7 @@ use engine::paint::{clear, Paint};
 use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
   use crate::Control;
 
-  pub fn step(id: &isize, value: &ModValue) -> ModValue {
+  pub fn step(delta_time: u128, id: &isize, value: &ModValue) -> ModValue {
     let Pendulum {
       polar,
       point,
@@ -82,7 +82,7 @@ use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
     }
   }
 
-  pub fn draw(value: &ModValue) {
+  pub fn draw(paint: &mut Paint, value: &ModValue) -> ModValue {
     let Pendulum {
       polar,
       point,
@@ -90,10 +90,11 @@ use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
       g,
     } = value.pendulum.unwrap();
     // println!("{}", print_cartesian(&polar_to_cartesian(&polar)));
+    *value
   }
 
   pub fn draw_post(paint: &Paint) {
-    paint.draw_triangles();
+    paint.set_draw_triangles();
     paint.publish();
   }
   pub fn draw_pre(program: &Program) {
@@ -129,7 +130,7 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
     step.insert(
       ModId::PENDULUM,
       Box::new(Mod {
-        function: obj::step as fn(&isize, &ModValue) -> ModValue,
+        function: obj::step as fn(u128, &isize, &ModValue) -> ModValue,
         value: set,
       }),
     );
@@ -139,12 +140,12 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
     let mut set = HashSet::new();
     set.insert(0);
     map.insert(ModId::PENDULUM, Box::new(Mod {
-      function: obj::draw as fn(&ModValue) -> (),
+      function: obj::draw as fn(&mut Paint, &ModValue) -> ModValue,
       value: set,
     }));
     let program = init_default_program().unwrap();
     let mut paint = Paint::new(&graphics.get_vertex_buffer());
-    paint.create_triangle2D([
+    paint.create_triangle2d([
       [-0.5f32, -0.5f32],
       [0.5f32, -0.5f32],
       [0.0f32, 0.5f32]]);

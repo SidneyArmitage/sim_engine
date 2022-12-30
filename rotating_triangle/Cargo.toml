@@ -1,0 +1,12 @@
+[package]
+name = "rotating_triangle"
+version = "0.1.0"
+edition = "2018"
+
+[[bin]]
+name = "rotating_triangle"
+path = "src/mod.rs"
+
+[dependencies]
+engine = { path = "../engine" }
+float-cmp = "0.9.0"

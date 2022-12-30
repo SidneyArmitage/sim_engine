@@ -2,5 +2,6 @@
 
 members = [
   "engine",
-  "double_pendulum"
+  "double_pendulum",
+  "rotating_triangle"
 ]
