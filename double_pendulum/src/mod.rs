@@ -145,7 +145,7 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
     }));
     let program = init_default_program().unwrap();
     let mut paint = Paint::new(&graphics.get_vertex_buffer());
-    paint.create_triangle2d([
+    paint.create_triangle2d(&[
       [-0.5f32, -0.5f32],
       [0.5f32, -0.5f32],
       [0.0f32, 0.5f32]]);
