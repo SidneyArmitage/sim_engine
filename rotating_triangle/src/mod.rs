@@ -46,7 +46,7 @@ mod obj {
   */
   pub fn draw(paint: &mut Paint, value: &ModValue) -> ModValue {
     let rotation = value.triangle.unwrap().rotation;
-    let painted = paint.draw_triangle2d(
+    let painted = paint.draw_triangles2d(
       &value.painted,
       &[
         matrix_rotate2d(rotation, [-0.5f32, -0.5f32]),

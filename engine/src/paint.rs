@@ -21,36 +21,6 @@ impl Paint {
     }
   }
 
-  pub fn create_triangle2d(&mut self, points: &[[f32; 2]; 3]) -> Painted {
-    let initial = self.vertices.len();
-    self.vertices.extend_from_slice(&points[0]);
-    self.vertices.push(0f32);
-    self.vertices.extend_from_slice(&points[1]);
-    self.vertices.push(0f32);
-    self.vertices.extend_from_slice(&points[2]);
-    self.vertices.push(0f32);
-    Painted {
-      start: initial,
-      length: 9,
-    }
-  }
-
-  pub fn draw_triangle2d(&mut self, painted: &Option<Painted>, points: &[[f32; 2]; 3]) -> Painted {
-    if painted.is_some() {
-      let unwrapped_painted = painted.unwrap();
-      for i in 0..=2 {
-        self
-          .vertices[i * 3 + unwrapped_painted.start + 0] =  points[i][0];
-        self
-          .vertices[i * 3 + unwrapped_painted.start + 1] = points[i][1];
-        self
-          .vertices[i * 3 + unwrapped_painted.start + 2] = 0f32;
-      }
-      return unwrapped_painted;
-    }
-    self.create_triangle2d(points)
-  }
-
   pub fn create_triangles2d(&mut self, points: &[[f32; 2]]) -> Painted {
     if points.len() % 3 != 0 {
       panic!("expected 3 points for each triangle.");
@@ -186,29 +156,11 @@ mod tests {
   }
 
   #[test]
-  fn create_triangle2d() {
+  fn create_two_triangles2d_separate_draws() {
     let mut paint = Paint::new(&0);
+    paint.create_triangles2d(&[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]]);
     let result =
-      paint.create_triangle2d(&[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]]);
-    assert_eq!(paint.vertices[0], -0.5f32);
-    assert_eq!(paint.vertices[1], -0.5f32);
-    assert_eq!(paint.vertices[2], -0f32);
-    assert_eq!(paint.vertices[3], 0.5f32);
-    assert_eq!(paint.vertices[4], -0.5f32);
-    assert_eq!(paint.vertices[5], -0f32);
-    assert_eq!(paint.vertices[6], 0f32);
-    assert_eq!(paint.vertices[7], 0.5f32);
-    assert_eq!(paint.vertices[8], 0f32);
-    assert_eq!(result.start, 0);
-    assert_eq!(result.length, 9);
-  }
-
-  #[test]
-  fn create_two_triangle2d() {
-    let mut paint = Paint::new(&0);
-    paint.create_triangle2d(&[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]]);
-    let result =
-      paint.create_triangle2d(&[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]]);
+      paint.create_triangles2d(&[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]]);
     for i in 0..1 {
       assert_eq!(paint.vertices[i + 0], -0.5f32);
       assert_eq!(paint.vertices[i + 1], -0.5f32);
@@ -225,9 +177,9 @@ mod tests {
   }
 
   #[test]
-  fn draw_new_triangle2d() {
+  fn draw_new_triangles2d() {
     let mut paint = Paint::new(&0);
-    let result = paint.draw_triangle2d(
+    let result = paint.draw_triangles2d(
       &None,
       &[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]],
     );
@@ -311,13 +263,13 @@ mod tests {
   }
 
   #[test]
-  fn draw_existing_triangle2d() {
+  fn draw_existing_triangles2d_separate_draws() {
     let mut paint = Paint::new(&0);
-    let painted = paint.draw_triangle2d(
+    let painted = paint.draw_triangles2d(
       &None,
       &[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]],
     );
-    let result = paint.draw_triangle2d(
+    let result = paint.draw_triangles2d(
       &Some(painted),
       &[[-0.1f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.1f32]],
     );
@@ -335,17 +287,17 @@ mod tests {
   }
   
   #[test]
-  fn draw_existing_second_triangle2d() {
+  fn draw_existing_second_triangles2d() {
     let mut paint = Paint::new(&0);
-    paint.draw_triangle2d(
+    paint.draw_triangles2d(
       &None,
       &[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]],
     );
-    let painted = paint.draw_triangle2d(
+    let painted = paint.draw_triangles2d(
       &None,
       &[[-0.5f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.5f32]],
     );
-    let result = paint.draw_triangle2d(
+    let result = paint.draw_triangles2d(
       &Some(painted),
       &[[-0.1f32, -0.5f32], [0.5f32, -0.5f32], [0.0f32, 0.1f32]],
     );
