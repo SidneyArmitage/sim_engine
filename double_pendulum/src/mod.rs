@@ -174,6 +174,9 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
       }),
     );
     let program = init_default_program().unwrap();
+    program.set_used();
+    let uniform_ptr = program.get_uniform::<f32>("u_aspectRatio");
+    uniform_ptr.set_uniform(700. / 900.);
     let paint = Paint::new(&graphics.get_vertex_buffer());
     vec![Draw {
       map,

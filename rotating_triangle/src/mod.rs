@@ -46,12 +46,14 @@ mod obj {
   */
   pub fn draw(paint: &mut Paint, value: &ModValue) -> ModValue {
     let rotation = value.triangle.unwrap().rotation;
+    let height = 60f32.to_radians().sin();
+    let ratio = -1. / 3.;
     let painted = paint.draw_triangles2d(
       &value.painted,
       &[
-        matrix_rotate2d(rotation, [-0.5f32, -0.5f32]),
-        matrix_rotate2d(rotation, [0.5f32, -0.5f32]),
-        matrix_rotate2d(rotation, [0.0f32, 0.5f32]),
+        matrix_rotate2d(rotation, [-0.5f32, ratio * height]),
+        matrix_rotate2d(rotation, [0.5f32, ratio * height]),
+        matrix_rotate2d(rotation, [0.0f32, (1. + ratio) * height]),
       ],
     );
 
@@ -105,6 +107,9 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
       }),
     );
     let program = init_default_program().unwrap();
+    program.set_used();
+    let uniform_ptr = program.get_uniform::<f32>("u_aspectRatio");
+    uniform_ptr.set_uniform(700. / 900.);
     let paint = Paint::new(&graphics.get_vertex_buffer());
     vec![Draw {
       map,

@@ -1,3 +1,5 @@
+use std::{ffi::CString, marker::{self, PhantomData}};
+
 use super::{create_whitespace_cstring_with_len, shader::Shader};
 
 pub struct Program {
@@ -55,6 +57,25 @@ impl Program {
   pub fn set_used(&self) {
     unsafe {
       gl::UseProgram(self.id);
+    }
+  }
+
+  pub fn get_uniform<T>(&self, uniform_name: &str) -> Uniform<T> {
+    let uniform_c_string = CString::new(uniform_name).unwrap();
+    let id = unsafe { gl::GetUniformLocation(self.id, uniform_c_string.as_ptr()) };
+    Uniform::<T> { id: id, _data: PhantomData }
+  }
+}
+
+pub struct Uniform<T> {
+  id: i32,
+  _data: PhantomData<T>,
+}
+
+impl Uniform<f32> {
+  pub fn set_uniform(&self, value: f32) {
+    unsafe {
+      gl::Uniform1f(self.id, value);
     }
   }
 }

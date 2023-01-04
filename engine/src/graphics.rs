@@ -42,7 +42,7 @@ impl Graphics {
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(4, 5);
     let window = video_subsystem
-      .window("test", 900, 700)
+      .window("simulation", 900, 700)
       .opengl()
       .resizable()
       .build()
