@@ -1,6 +1,8 @@
-☐ add method for storing program
-☐ pass in given program
+✔ add method for storing program @done(23-01-04 22:06)
+✔ pass in given program @done(23-01-04 22:06)
 ✔ draw onto program @done(22-11-27 13:09)
 ✔ run sim round in graphics program @done(22-11-27 13:09)
 ✔ pass in graphics object to interact with opengl @done(22-12-31 04:44)
 ☐ implement correct aspect ration
+☐ allow multiple triangles
+☐ verify triangle length
