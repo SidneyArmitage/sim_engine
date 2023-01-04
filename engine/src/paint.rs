@@ -40,14 +40,11 @@ impl Paint {
       let unwrapped_painted = painted.unwrap();
       for i in 0..=2 {
         self
-          .vertices
-          .insert(i * 3 + unwrapped_painted.start + 0, points[i][0]);
+          .vertices[i * 3 + unwrapped_painted.start + 0] =  points[i][0];
         self
-          .vertices
-          .insert(i * 3 + unwrapped_painted.start + 1, points[i][1]);
+          .vertices[i * 3 + unwrapped_painted.start + 1] = points[i][1];
         self
-          .vertices
-          .insert(i * 3 + unwrapped_painted.start + 2, 0f32);
+          .vertices[i * 3 + unwrapped_painted.start + 2] = 0f32;
       }
       return unwrapped_painted;
     }
@@ -80,17 +77,13 @@ impl Paint {
     }
     if painted.is_some() {
       let unwrapped_painted = painted.unwrap();
-      println!("{:#?}", self.vertices);
       for i in 0..=(points.len() - 1) {
         self
-          .vertices
-          .insert(i * 3 + unwrapped_painted.start + 0, points[i][0]);
+          .vertices[i * 3 + unwrapped_painted.start + 0] =  points[i][0];
         self
-          .vertices
-          .insert(i * 3 + unwrapped_painted.start + 1, points[i][1]);
+          .vertices[i * 3 + unwrapped_painted.start + 1] = points[i][1];
         self
-          .vertices
-          .insert(i * 3 + unwrapped_painted.start + 2, 0f32);
+          .vertices[i * 3 + unwrapped_painted.start + 2] = 0f32;
       }
       return unwrapped_painted;
     }
@@ -102,7 +95,7 @@ impl Paint {
       gl::DrawArrays(
         gl::TRIANGLES, // mode
         0,             // starting index in the enabled arrays
-        3 as i32,      // number of indices to be rendered
+        self.vertices.len() as i32,      // number of indices to be rendered
       );
     }
   }

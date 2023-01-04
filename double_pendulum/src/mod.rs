@@ -1,6 +1,10 @@
 extern crate engine;
 
-use engine::{graphics::{self, init_default_program, Graphics}, Control, Mod, start, Draw, paint::Paint, App};
+use engine::{
+  graphics::{self, init_default_program, Graphics},
+  paint::{Paint, Painted},
+  start, App, Control, Draw, Mod,
+};
 use std::collections::{HashMap, HashSet};
 
 #[derive(PartialEq, Eq, Hash)]
@@ -25,23 +29,24 @@ struct Pendulum {
 #[derive(Clone, Copy)]
 pub struct ModValue {
   pendulum: Option<Pendulum>,
+  painted: Option<Painted>,
 }
 
-pub fn polar_to_cartesian(Polar { theta, length }: &Polar) -> ((f64, f64), (f64, f64), (f64, f64)) {
+pub fn polar_to_cartesian(Polar { theta, length }: &Polar) -> [[f64; 2]; 3] {
   let x = length * theta.0.sin();
   let y = -length * theta.0.cos();
-  (
-    (0., 0.),
-    (x, y),
-    (x + length * theta.1.sin(), y - length * theta.1.cos()),
-  )
+  [
+    [0., 0.],
+    [x, y],
+    [x + length * theta.1.sin(), y - length * theta.1.cos()],
+  ]
 }
 mod obj {
   use engine::graphics::program::{self, Program};
-use engine::paint::{clear, Paint};
+  use engine::paint::{clear, Paint};
 
-use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
   use crate::Control;
+  use crate::{polar_to_cartesian, ModValue, Pendulum, Polar};
 
   pub fn step(delta_time: u128, id: &isize, value: &ModValue) -> ModValue {
     let Pendulum {
@@ -50,6 +55,8 @@ use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
       dt,
       g,
     } = value.pendulum.unwrap();
+
+    let time = ((delta_time as f64 / 1000f64) * 0.0000005f64);
     let theta = polar.theta;
     let length = polar.length;
 
@@ -64,8 +71,8 @@ use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
     let expr6 = expr4 - expr5;
     let new_polar = Polar {
       theta: (
-        theta.0 + dt * (point.0 - point.1 * expr1) / expr3,
-        theta.1 + dt * (2f64 * point.1 - point.0 * expr1) / expr3,
+        theta.0 + time * (point.0 - point.1 * expr1) / expr3,
+        theta.1 + time * (2f64 * point.1 - point.0 * expr1) / expr3,
       ),
       length: length,
     };
@@ -73,12 +80,13 @@ use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
       pendulum: Some(Pendulum {
         polar: new_polar,
         point: (
-          point.0 + dt * (-2f64 * g * length * theta.0.sin() - expr6),
-          point.1 + dt * (-g * length * theta.1.sin() + expr6),
+          point.0 + time * (-2f64 * g * length * theta.0.sin() - expr6),
+          point.1 + time * (-g * length * theta.1.sin() + expr6),
         ),
         dt: dt,
         g: g,
       }),
+      painted: value.painted,
     }
   }
 
@@ -89,8 +97,28 @@ use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
       dt,
       g,
     } = value.pendulum.unwrap();
-    // println!("{}", print_cartesian(&polar_to_cartesian(&polar)));
-    *value
+    let points = polar_to_cartesian(&polar);
+    let painted = paint.draw_triangles2d(
+      &value.painted,
+      &[
+        [points[0][0] as f32 - 0.01, points[0][1] as f32 - 0.01],
+        [points[0][0] as f32 + 0.01, points[0][1] as f32 + 0.01],
+        [points[1][0] as f32 * 0.5, points[1][1] as f32 * 0.5],
+        [
+          points[1][0] as f32 * 0.5 - 0.01,
+          points[1][1] as f32 * 0.5 - 0.01,
+        ],
+        [
+          points[1][0] as f32 * 0.5 + 0.01,
+          points[1][1] as f32 * 0.5 + 0.01,
+        ],
+        [points[2][0] as f32 * 0.5, points[2][1] as f32 * 0.5],
+      ],
+    );
+    ModValue {
+      pendulum: value.pendulum,
+      painted: Some(painted),
+    }
   }
 
   pub fn draw_post(paint: &Paint) {
@@ -101,13 +129,6 @@ use crate::{polar_to_cartesian, print_cartesian, ModValue, Pendulum, Polar};
     program.set_used();
     clear();
   }
-}
-
-fn print_cartesian(input: &((f64, f64), (f64, f64), (f64, f64))) -> String {
-  format!(
-    "(({}, {}), ({}, {}), ({}, {}))",
-    input.0 .0, input.0 .1, input.1 .0, input.1 .1, input.2 .0, input.2 .1
-  )
 }
 
 pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
@@ -122,7 +143,13 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
     g: 9.81,
   });
   let mut data = HashMap::new();
-  data.insert(0, ModValue { pendulum });
+  data.insert(
+    0,
+    ModValue {
+      pendulum,
+      painted: None,
+    },
+  );
   let mut step = HashMap::new();
   {
     let mut set = HashSet::new();
@@ -139,16 +166,15 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
     let mut map = HashMap::new();
     let mut set = HashSet::new();
     set.insert(0);
-    map.insert(ModId::PENDULUM, Box::new(Mod {
-      function: obj::draw as fn(&mut Paint, &ModValue) -> ModValue,
-      value: set,
-    }));
+    map.insert(
+      ModId::PENDULUM,
+      Box::new(Mod {
+        function: obj::draw as fn(&mut Paint, &ModValue) -> ModValue,
+        value: set,
+      }),
+    );
     let program = init_default_program().unwrap();
-    let mut paint = Paint::new(&graphics.get_vertex_buffer());
-    paint.create_triangle2d(&[
-      [-0.5f32, -0.5f32],
-      [0.5f32, -0.5f32],
-      [0.0f32, 0.5f32]]);
+    let paint = Paint::new(&graphics.get_vertex_buffer());
     vec![Draw {
       map,
       post: obj::draw_post,
@@ -157,13 +183,16 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
       paint,
     }]
   };
-  App::new(Control {
-    index: 2,
-    // simulation objects
-    data,
-    draw,
-    step,
-  }, graphics)
+  App::new(
+    Control {
+      index: 2,
+      // simulation objects
+      data,
+      draw,
+      step,
+    },
+    graphics,
+  )
 }
 
 fn main() {
@@ -193,8 +222,8 @@ mod tests {
       length: 1.0f64,
     };
     let out = polar_to_cartesian(&polar);
-    assert_eq!(out.0, (0f64, 0f64));
-    assert_eq!((out.1 .0.round(), out.1 .1.round()), (0f64, -1f64));
-    assert_eq!((out.2 .0.round(), out.2 .1.round()), (1f64, -1f64));
+    assert_eq!([0f64, 0f64], out[0]);
+    assert_eq!([0f64, -1f64], [out[1][0].round(), out[1][1].round()]);
+    assert_eq!([1f64, -1f64], [out[2][0].round(), out[2][1].round()]);
   }
 }
