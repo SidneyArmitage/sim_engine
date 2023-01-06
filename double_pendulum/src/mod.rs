@@ -59,7 +59,7 @@ mod obj {
 
   use crate::{matrix_rotate2d, Control};
   use crate::{polar_to_cartesian, ModValue, Pendulum, Polar};
-
+  // there is a bug here due to time. When time is paused, some state leaks leading to a change in velocity of the simulation.
   pub fn step(delta_time: u128, id: &isize, value: &ModValue) -> ModValue {
     let Pendulum {
       polar,
