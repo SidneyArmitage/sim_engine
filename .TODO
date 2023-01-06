@@ -7,3 +7,5 @@
 ✔ allow multiple triangles @done(23-01-04 22:34)
 ✔ verify triangle length @done(23-01-04 22:34)
 ☐ implement traits for controls
+☐ add matrix
+☐ fix delta time bug on pause
