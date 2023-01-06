@@ -42,7 +42,6 @@ pub fn polar_to_cartesian(Polar { theta, length }: &Polar) -> [[f64; 2]; 3] {
   ]
 }
 
-
 pub fn matrix_rotate2d(radians: f32, input: [f32; 2]) -> [f32; 2] {
   let cos = radians.cos();
   let sin = radians.sin();
@@ -55,10 +54,10 @@ pub fn matrix_rotate2d(radians: f32, input: [f32; 2]) -> [f32; 2] {
 mod obj {
   use std::f32::consts::PI;
 
-use engine::graphics::program::{self, Program};
+  use engine::graphics::program::{self, Program};
   use engine::paint::{clear, Paint};
 
-  use crate::{Control, matrix_rotate2d};
+  use crate::{matrix_rotate2d, Control};
   use crate::{polar_to_cartesian, ModValue, Pendulum, Polar};
 
   pub fn step(delta_time: u128, id: &isize, value: &ModValue) -> ModValue {
@@ -124,10 +123,19 @@ use engine::graphics::program::{self, Program};
       &[
         start_left,
         start_right,
-        [points[1][0] as f32 * 0.5 + start_right[0], points[1][1] as f32 * 0.5 + start_right[1]],
+        [
+          points[1][0] as f32 * 0.5 + start_right[0],
+          points[1][1] as f32 * 0.5 + start_right[1],
+        ],
         start_left,
-        [points[1][0] as f32 * 0.5 + start_left[0], points[1][1] as f32 * 0.5 + start_left[1]],
-        [points[1][0] as f32 * 0.5 + start_right[0], points[1][1] as f32 * 0.5 + start_right[1]],
+        [
+          points[1][0] as f32 * 0.5 + start_left[0],
+          points[1][1] as f32 * 0.5 + start_left[1],
+        ],
+        [
+          points[1][0] as f32 * 0.5 + start_right[0],
+          points[1][1] as f32 * 0.5 + start_right[1],
+        ],
         [
           points[1][0] as f32 * 0.5 + end_left[0],
           points[1][1] as f32 * 0.5 + end_left[1],
@@ -136,13 +144,22 @@ use engine::graphics::program::{self, Program};
           points[1][0] as f32 * 0.5 + end_right[0],
           points[1][1] as f32 * 0.5 + end_right[1],
         ],
-        [points[2][0] as f32 * 0.5 + end_right[0], points[2][1] as f32 * 0.5 + end_right[1]],
+        [
+          points[2][0] as f32 * 0.5 + end_right[0],
+          points[2][1] as f32 * 0.5 + end_right[1],
+        ],
         [
           points[1][0] as f32 * 0.5 + end_left[0],
           points[1][1] as f32 * 0.5 + end_left[1],
         ],
-        [points[2][0] as f32 * 0.5 + end_left[0], points[2][1] as f32 * 0.5 + end_left[1]],
-        [points[2][0] as f32 * 0.5 + end_right[0], points[2][1] as f32 * 0.5 + end_right[1]],
+        [
+          points[2][0] as f32 * 0.5 + end_left[0],
+          points[2][1] as f32 * 0.5 + end_left[1],
+        ],
+        [
+          points[2][0] as f32 * 0.5 + end_right[0],
+          points[2][1] as f32 * 0.5 + end_right[1],
+        ],
       ],
     );
     ModValue {
