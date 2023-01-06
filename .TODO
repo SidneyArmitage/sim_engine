@@ -7,5 +7,11 @@
 ✔ allow multiple triangles @done(23-01-04 22:34)
 ✔ verify triangle length @done(23-01-04 22:34)
 ☐ implement traits for controls
-☐ add matrix
+  control object:
+  ☐ index should be attached to all data object lists
+  ☐ index should increment for data types when a new one is added
+  ☐ data object should be added via function
+  ☐ builder should be used to create the control object (this may be meta programming or runtime)
+  ☐ control object data type should be owned by the engine library
+☐ add matrix project
 ✘ fix delta time bug on pause @cancelled(23-01-06 22:17)
