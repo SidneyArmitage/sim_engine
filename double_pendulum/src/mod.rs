@@ -14,15 +14,16 @@ pub enum ModId {
 
 #[derive(Clone, Copy)]
 pub struct Polar {
-  theta: (f64, f64),
+  theta: [f64; 2],
   length: f64,
 }
 
 #[derive(Clone, Copy)]
 struct Pendulum {
-  polar: Polar,
-  point: (f64, f64),
   dt: f64,
+  last_position: [f64; 2],
+  point: [f64; 2],
+  polar: Polar,
   g: f64,
 }
 
@@ -33,12 +34,12 @@ pub struct ModValue {
 }
 
 pub fn polar_to_cartesian(Polar { theta, length }: &Polar) -> [[f64; 2]; 3] {
-  let x = length * theta.0.sin();
-  let y = -length * theta.0.cos();
+  let x = length * theta[0].sin();
+  let y = -length * theta[0].cos();
   [
     [0., 0.],
     [x, y],
-    [x + length * theta.1.sin(), y - length * theta.1.cos()],
+    [x + length * theta[1].sin(), y - length * theta[1].cos()],
   ]
 }
 
@@ -62,39 +63,41 @@ mod obj {
   // there is a bug here due to time. When time is paused, some state leaks leading to a change in velocity of the simulation.
   pub fn step(delta_time: u128, id: &isize, value: &ModValue) -> ModValue {
     let Pendulum {
+      last_position,
       polar,
       point,
       dt,
       g,
     } = value.pendulum.unwrap();
 
-    let time = ((delta_time as f64 / 1000f64) * 0.0000005f64);
+    let time = 0.0005f64;
     let theta = polar.theta;
     let length = polar.length;
 
-    let expr1 = (theta.0 - theta.1).cos();
-    let expr2 = (theta.0 - theta.1).sin();
+    let expr1 = (theta[0] - theta[1]).cos();
+    let expr2 = (theta[0] - theta[1]).sin();
     let expr3 = 1f64 + expr2.powf(2f64);
-    let expr4 = (point.0 * point.1 * expr2) / expr3;
-    let expr5 = (point.0.powf(2f64) + 2f64 * point.1.powf(2f64) - point.0 * point.1 * expr1)
-      * (2f64 * (theta.0 - theta.1)).sin()
+    let expr4 = (point[0] * point[1] * expr2) / expr3;
+    let expr5 = (point[0].powf(2f64) + 2f64 * point[1].powf(2f64) - point[0] * point[1] * expr1)
+      * (2f64 * (theta[0] - theta[1])).sin()
       / 2f64
       / expr3.powf(2f64);
     let expr6 = expr4 - expr5;
     let new_polar = Polar {
-      theta: (
-        theta.0 + time * (point.0 - point.1 * expr1) / expr3,
-        theta.1 + time * (2f64 * point.1 - point.0 * expr1) / expr3,
-      ),
+      theta: [
+        theta[0] + time * (point[0] - point[1] * expr1) / expr3,
+        theta[1] + time * (2f64 * point[1] - point[0] * expr1) / expr3,
+      ],
       length: length,
     };
     ModValue {
       pendulum: Some(Pendulum {
+        last_position: point,
         polar: new_polar,
-        point: (
-          point.0 + time * (-2f64 * g * length * theta.0.sin() - expr6),
-          point.1 + time * (-g * length * theta.1.sin() + expr6),
-        ),
+        point: [
+          point[0] + time * (-2f64 * g * length * theta[0].sin() - expr6),
+          point[1] + time * (-g * length * theta[1].sin() + expr6),
+        ],
         dt: dt,
         g: g,
       }),
@@ -104,6 +107,7 @@ mod obj {
 
   pub fn draw(paint: &mut Paint, value: &ModValue) -> ModValue {
     let Pendulum {
+      last_position,
       polar,
       point,
       dt,
@@ -111,9 +115,9 @@ mod obj {
     } = value.pendulum.unwrap();
     let points = polar_to_cartesian(&polar);
     // polar + 90 deg * len + cartesian
-    let start_rotation = 90f32.to_radians() + (polar.theta.0 as f32);
-    let end_rotation = 90f32.to_radians() + (polar.theta.1 as f32);
-    //polar.theta.0 as f32
+    let start_rotation = 90f32.to_radians() + (polar.theta[0] as f32);
+    let end_rotation = 90f32.to_radians() + (polar.theta[1] as f32);
+    //polar.theta[0] as f32
     let start_right = matrix_rotate2d(start_rotation, [0., 0.01]);
     let start_left = matrix_rotate2d(start_rotation, [0., -0.01]);
     let end_right = matrix_rotate2d(end_rotation, [0., 0.01]);
@@ -180,12 +184,13 @@ mod obj {
 
 pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
   let polar = Polar {
-    theta: (std::f64::consts::PI, std::f64::consts::PI - 0.01), // can change
+    theta: [std::f64::consts::PI, std::f64::consts::PI - 0.01], // can change
     length: 1.0f64,
   };
   let mut pendulum = Some(Pendulum {
+    last_position: [0f64, 0f64],
     polar: polar,
-    point: (0f64, 0f64),
+    point: [0f64, 0f64],
     dt: 0.01f64, // can change
     g: 9.81,
   });
@@ -254,12 +259,13 @@ mod tests {
   #[test]
   fn init() {
     let polar = Polar {
-      theta: (std::f64::consts::PI, std::f64::consts::PI - 0.01), // can change
+      theta: [std::f64::consts::PI, std::f64::consts::PI - 0.01], // can change
       length: 1.0f64,
     };
     Pendulum {
+      last_position: [0f64, 0f64],
       polar: polar,
-      point: (0f64, 0f64),
+      point: [0f64, 0f64],
       dt: 0.01f64, // can change
       g: 9.81,
     };
@@ -268,7 +274,7 @@ mod tests {
   #[test]
   fn polar_to_cartesian_runs() {
     let polar = Polar {
-      theta: (0f64, std::f64::consts::PI / 2f64), // can change
+      theta: [0f64, std::f64::consts::PI / 2f64], // can change
       length: 1.0f64,
     };
     let out = polar_to_cartesian(&polar);
