@@ -3,7 +3,7 @@ use gl::types::GLuint;
 use crate::graphics::Graphics;
 
 pub struct Paint {
-  vertices: Vec<f32>,
+  pub vertices: Vec<f32>,
   vertex_buffer_object: GLuint,
 }
 

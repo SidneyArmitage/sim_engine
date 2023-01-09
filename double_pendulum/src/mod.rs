@@ -23,6 +23,7 @@ struct Pendulum {
   dt: f64,
   last_position: [f64; 2],
   point: [f64; 2],
+  points: [[f64; 2]; 3],
   polar: Polar,
   g: f64,
 }
@@ -53,7 +54,6 @@ pub fn matrix_rotate2d(radians: f32, input: [f32; 2]) -> [f32; 2] {
 }
 
 mod obj {
-  use std::f32::consts::PI;
 
   use engine::graphics::program::{self, Program};
   use engine::paint::{clear, Paint};
@@ -61,11 +61,12 @@ mod obj {
   use crate::{matrix_rotate2d, Control};
   use crate::{polar_to_cartesian, ModValue, Pendulum, Polar};
   // there is a bug here due to time. When time is paused, some state leaks leading to a change in velocity of the simulation.
-  pub fn step(delta_time: u128, id: &isize, value: &ModValue) -> ModValue {
+  pub fn step(_: u128, _: &isize, value: &ModValue) -> ModValue {
     let Pendulum {
-      last_position,
-      polar,
+      last_position: _,
       point,
+      points,
+      polar,
       dt,
       g,
     } = value.pendulum.unwrap();
@@ -90,10 +91,12 @@ mod obj {
       ],
       length: length,
     };
+    let cartesian = polar_to_cartesian(&polar);
     ModValue {
       pendulum: Some(Pendulum {
-        last_position: point,
+        last_position: points[2],
         polar: new_polar,
+        points: cartesian,
         point: [
           point[0] + time * (-2f64 * g * length * theta[0].sin() - expr6),
           point[1] + time * (-g * length * theta[1].sin() + expr6),
@@ -107,13 +110,13 @@ mod obj {
 
   pub fn draw(paint: &mut Paint, value: &ModValue) -> ModValue {
     let Pendulum {
-      last_position,
+      last_position: _,
       polar,
-      point,
-      dt,
-      g,
+      point: _1,
+      points,
+      dt: _2,
+      g: _3,
     } = value.pendulum.unwrap();
-    let points = polar_to_cartesian(&polar);
     // polar + 90 deg * len + cartesian
     let start_rotation = 90f32.to_radians() + (polar.theta[0] as f32);
     let end_rotation = 90f32.to_radians() + (polar.theta[1] as f32);
@@ -172,13 +175,97 @@ mod obj {
     }
   }
 
-  pub fn draw_post(paint: &Paint) {
-    paint.set_draw_triangles();
-    paint.publish();
+  pub fn draw_trail(paint: &mut Paint, value: &ModValue) -> ModValue {
+    let Pendulum {
+      last_position,
+      polar: _,
+      point: _1,
+      points,
+      dt: _2,
+      g: _3,
+    } = value.pendulum.unwrap();
+    let direction = [
+      points[2][0] - last_position[0],
+      points[2][1] - last_position[1],
+    ];
+    let magnitude = direction[0].abs() + direction[1].abs();
+    // rotate by 90 degrees to make it easier to work with
+    let normalised = [
+      (direction[1] / magnitude) * 0.01,
+      -(direction[0] / magnitude) * 0.01,
+    ];
+    if normalised[0] > 1f64 || normalised[1] > 1f64 {
+      println!(
+        "{:?} - {:?} = {:?} then {:?}",
+        points[2], last_position, direction, normalised
+      );
+      panic!("invalid normal");
+    }
+    let scaled_last_position = [last_position[0] / 2.0, last_position[1] / 2.0];
+    let scaled_point = [points[2][0] / 2.0, points[2][1] / 2.0];
+    paint.create_triangles2d(&[
+      [
+        (scaled_last_position[0] + normalised[0]) as f32,
+        (scaled_last_position[1] + normalised[1]) as f32,
+      ],
+      [
+        (scaled_last_position[0] - normalised[0]) as f32,
+        (scaled_last_position[1] - normalised[1]) as f32,
+      ],
+      [
+        (scaled_point[0] + normalised[0]) as f32,
+        (scaled_point[1] + normalised[1]) as f32,
+      ],
+      [
+        (scaled_last_position[0] - normalised[0]) as f32,
+        (scaled_last_position[1] - normalised[1]) as f32,
+      ],
+      [
+        (scaled_point[0] + normalised[0]) as f32,
+        (scaled_point[1] + normalised[1]) as f32,
+      ],
+      [
+        (scaled_point[0] - normalised[0]) as f32,
+        (scaled_point[1] - normalised[1]) as f32,
+      ],
+    ]);
+    *value
   }
+
+  pub fn draw_post(paint: &Paint) {}
   pub fn draw_pre(program: &Program) {
     program.set_used();
-    clear();
+  }
+}
+
+fn init_draw(
+  graphics: &Graphics,
+  color_array: [f32; 4],
+  draw_function: fn(&mut Paint, &ModValue) -> ModValue,
+) -> Draw<ModValue, ModId> {
+  let mut map = HashMap::new();
+  let mut set = HashSet::new();
+  set.insert(0);
+  map.insert(
+    ModId::PENDULUM,
+    Box::new(Mod {
+      function: draw_function,
+      value: set,
+    }),
+  );
+  let program = init_default_program().unwrap();
+  program.set_used();
+  let aspect = program.get_uniform::<f32>("u_aspectRatio");
+  aspect.set_uniform(700. / 900.);
+  let color = program.get_uniform::<[f32; 4]>("u_color");
+  color.set_uniform(color_array);
+  let paint = Paint::new(&graphics.get_vertex_buffer());
+  Draw {
+    map,
+    post: obj::draw_post,
+    pre: obj::draw_pre,
+    program,
+    paint,
   }
 }
 
@@ -190,7 +277,8 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
   let mut pendulum = Some(Pendulum {
     last_position: [0f64, 0f64],
     polar: polar,
-    point: [0f64, 0f64],
+    point: [0f64, 2f64],
+    points: [[0f64, 0f64], [0f64, 0f64], [0f64, 0f64]],
     dt: 0.01f64, // can change
     g: 9.81,
   });
@@ -215,28 +303,18 @@ pub fn init(graphics: Graphics) -> App<ModValue, ModId> {
     );
   }
   let mut draw = {
-    let mut map = HashMap::new();
-    let mut set = HashSet::new();
-    set.insert(0);
-    map.insert(
-      ModId::PENDULUM,
-      Box::new(Mod {
-        function: obj::draw as fn(&mut Paint, &ModValue) -> ModValue,
-        value: set,
-      }),
+   
+    let draw_trail = init_draw(
+      &graphics,
+      [0.0, 0.0, 0.5, 1.0],
+      obj::draw_trail as fn(&mut Paint, &ModValue) -> ModValue,
     );
-    let program = init_default_program().unwrap();
-    program.set_used();
-    let uniform_ptr = program.get_uniform::<f32>("u_aspectRatio");
-    uniform_ptr.set_uniform(700. / 900.);
-    let paint = Paint::new(&graphics.get_vertex_buffer());
-    vec![Draw {
-      map,
-      post: obj::draw_post,
-      pre: obj::draw_pre,
-      program,
-      paint,
-    }]
+    let draw_pendulum = init_draw(
+      &graphics,
+      [0.5, 0.0, 0.0, 1.0],
+      obj::draw as fn(&mut Paint, &ModValue) -> ModValue,
+    );
+    vec![draw_trail, draw_pendulum]
   };
   App::new(
     Control {
@@ -264,8 +342,9 @@ mod tests {
     };
     Pendulum {
       last_position: [0f64, 0f64],
-      polar: polar,
       point: [0f64, 0f64],
+      points: [[0f64, 0f64], [0f64, 0f64], [0f64, 0f64]],
+      polar: polar,
       dt: 0.01f64, // can change
       g: 9.81,
     };

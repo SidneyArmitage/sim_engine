@@ -40,8 +40,10 @@ pub fn sim_round<T, G>(delta_time: u128, control: &mut Control<T, G>) {
       );
     }
   }
+  clear();
   // draw graphics
   for mut draw in control.draw.iter_mut() {
+    draw.program.set_used();
     (draw.pre)(&draw.program);
     for (_, module) in draw.map.iter_mut() {
       for id in (**module).value.iter() {
@@ -52,6 +54,8 @@ pub fn sim_round<T, G>(delta_time: u128, control: &mut Control<T, G>) {
       }
     }
     (draw.post)(&draw.paint);
+    draw.paint.set_draw_triangles();
+    draw.paint.publish();
   }
 }
 

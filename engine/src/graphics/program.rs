@@ -67,6 +67,14 @@ impl Program {
   }
 }
 
+impl Drop for Program {
+  fn drop(&mut self) {
+    unsafe {
+      gl::DeleteProgram(self.id);
+    }
+  }
+}
+
 pub struct Uniform<T> {
   id: i32,
   _data: PhantomData<T>,
@@ -80,10 +88,10 @@ impl Uniform<f32> {
   }
 }
 
-impl Drop for Program {
-  fn drop(&mut self) {
+impl Uniform<[f32; 4]> {
+  pub fn set_uniform(&self, value: [f32; 4]) {
     unsafe {
-      gl::DeleteProgram(self.id);
+      gl::Uniform4f(self.id, value[0], value[1], value[2], value[3]);
     }
   }
 }
