@@ -108,6 +108,17 @@ mod obj {
     }
   }
 
+  fn get_translated (cartesian: [f64; 2], theta: f64) -> [[f32; 2]; 2] {
+    let right = std::f64::consts::PI / 2f64;
+    let len = 0.01;
+    let x_offset = len * (theta + right).sin() as f32;
+    let y_offset = - len * (theta + right).cos() as f32;
+    [
+      [cartesian[0] as f32 - x_offset, cartesian[1] as f32 - y_offset],
+      [cartesian[0] as f32 + x_offset, cartesian[1] as f32 + y_offset]
+    ]
+  }
+
   pub fn draw(paint: &mut Paint, value: &ModValue) -> ModValue {
     let Pendulum {
       last_position: _,
@@ -117,56 +128,26 @@ mod obj {
       dt: _2,
       g: _3,
     } = value.pendulum.unwrap();
-    // polar + 90 deg * len + cartesian
-    let start_rotation = 90f32.to_radians() + (polar.theta[0] as f32);
-    let end_rotation = 90f32.to_radians() + (polar.theta[1] as f32);
-    //polar.theta[0] as f32
-    let start_right = matrix_rotate2d(start_rotation, [0., 0.01]);
-    let start_left = matrix_rotate2d(start_rotation, [0., -0.01]);
-    let end_right = matrix_rotate2d(end_rotation, [0., 0.01]);
-    let end_left = matrix_rotate2d(end_rotation, [0., -0.01]);
+    let translated_a0 = get_translated(points[0], polar.theta[0]);
+    let translated_a1 = get_translated(points[1], polar.theta[0]);
+    let translated_b0 = get_translated(points[1], polar.theta[1]);
+    let translated_b1 = get_translated(points[2], polar.theta[1]);
     let painted = paint.draw_triangles2d(
       &value.painted,
       &[
-        start_left,
-        start_right,
-        [
-          points[1][0] as f32 * 0.5 + start_right[0],
-          points[1][1] as f32 * 0.5 + start_right[1],
-        ],
-        start_left,
-        [
-          points[1][0] as f32 * 0.5 + start_left[0],
-          points[1][1] as f32 * 0.5 + start_left[1],
-        ],
-        [
-          points[1][0] as f32 * 0.5 + start_right[0],
-          points[1][1] as f32 * 0.5 + start_right[1],
-        ],
-        [
-          points[1][0] as f32 * 0.5 + end_left[0],
-          points[1][1] as f32 * 0.5 + end_left[1],
-        ],
-        [
-          points[1][0] as f32 * 0.5 + end_right[0],
-          points[1][1] as f32 * 0.5 + end_right[1],
-        ],
-        [
-          points[2][0] as f32 * 0.5 + end_right[0],
-          points[2][1] as f32 * 0.5 + end_right[1],
-        ],
-        [
-          points[1][0] as f32 * 0.5 + end_left[0],
-          points[1][1] as f32 * 0.5 + end_left[1],
-        ],
-        [
-          points[2][0] as f32 * 0.5 + end_left[0],
-          points[2][1] as f32 * 0.5 + end_left[1],
-        ],
-        [
-          points[2][0] as f32 * 0.5 + end_right[0],
-          points[2][1] as f32 * 0.5 + end_right[1],
-        ],
+        translated_a0[0],
+        translated_a0[1],
+        translated_a1[0],
+        translated_a0[1],
+        translated_a1[0],
+        translated_a1[1],
+        // 2nd arm
+        translated_b0[0],
+        translated_b0[1],
+        translated_b1[0],
+        translated_b0[1],
+        translated_b1[0],
+        translated_b1[1],
       ],
     );
     ModValue {
