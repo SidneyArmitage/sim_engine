@@ -110,13 +110,14 @@ impl Graphics {
         _ => {}
       }
     }
-    unsafe {
-      gl::BindVertexArray(self.vertex_array_object);
-    }
     let new_time = SystemTime::now();
     let delta_time = new_time.duration_since(current_time).unwrap();
     sim_round(delta_time.as_nanos(), control);
     current_time = new_time;
+    
+    unsafe {
+      gl::BindVertexArray(self.vertex_array_object);
+    }
     self.window.gl_swap_window();
   }
 }
